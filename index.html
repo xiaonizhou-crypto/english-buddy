@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>英语小伙伴 · 看图学单词</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coral:#FF6B8A;--teal:#00D9B0;--sun:#FFD93D;
+  --purple:#B18CFF;--pink:#FF85E0;--sky:#6EC6FF;
+  --g:rgba(255,255,255,.10);--gb:rgba(255,255,255,.16);
+  --gbd:rgba(255,255,255,.18);
+  --text:#fff;--text-sub:rgba(255,255,255,.52);
+}
+html,body{min-height:100%;background:#04020C;font-family:'Plus Jakarta Sans','Nunito',sans-serif;color:var(--text);overflow-x:hidden}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+
+#ballpit-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+header,#key-bar,.tabs,#main{position:relative;z-index:1}
+
+/* ── glass mixin ── */
+.gl{background:var(--g);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--gbd)}
+
+/* ── HEADER ── */
+header{
+  background:rgba(4,2,12,.72);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+  padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;
+  border-bottom:1px solid var(--gbd);flex-wrap:wrap;
+}
+.hdr-coin{
+  display:flex;align-items:center;gap:.35rem;
+  background:rgba(255,217,61,.14);border:1.5px solid rgba(255,217,61,.5);
+  border-radius:2rem;padding:.28rem .85rem;
+  font-weight:900;font-size:.88rem;color:var(--sun);cursor:default;
+}
+.hdr-nav{display:flex;gap:.4rem;flex-wrap:wrap}
+.hdr-nav a{
+  font-size:.73rem;font-weight:700;padding:.3rem 1rem;border-radius:9999px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.6);text-decoration:none;transition:all .2s;letter-spacing:.02em;
+}
+.hdr-nav a:hover{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.2)}
+.owl{font-size:2.2rem;line-height:1;filter:drop-shadow(0 0 10px rgba(177,140,255,.7))}
+.header-text h1{font-size:1.2rem;font-weight:800;color:#fff;letter-spacing:-.03em;text-shadow:0 0 28px rgba(177,140,255,.45)}
+.header-text p{font-size:.7rem;color:rgba(255,255,255,.36);font-weight:500;margin-top:.06rem;letter-spacing:.01em}
+
+/* ── KEY BAR ── */
+#key-bar{
+  background:rgba(4,2,12,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--gbd);
+  padding:.6rem 1.5rem;display:flex;align-items:center;justify-content:center;gap:.6rem;flex-wrap:wrap;
+}
+#key-bar label{font-size:.78rem;font-weight:800;color:var(--sun)}
+#key-input{
+  flex:1;max-width:320px;padding:.42rem .9rem;
+  border:1px solid var(--gbd);border-radius:1rem;
+  font-size:.85rem;font-family:'Nunito',sans-serif;outline:none;
+  background:var(--g);color:#fff;transition:border .15s;
+}
+#key-input::placeholder{color:rgba(255,255,255,.25)}
+#key-input:focus{border-color:var(--purple)}
+#key-save{
+  padding:.42rem 1.1rem;
+  background:linear-gradient(135deg,var(--purple),var(--sky));color:#fff;
+  border-radius:1rem;font-size:.8rem;font-weight:900;
+  box-shadow:0 3px 14px rgba(177,140,255,.4);transition:all .18s;
+}
+#key-save:hover{transform:translateY(-1px)}
+#key-bar.gone{display:none}
+
+/* ── TABS ── */
+.tabs{
+  display:flex;max-width:54rem;margin:0 auto;
+  padding:.85rem 1.5rem;
+}
+.tabs-inner{
+  display:inline-flex;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);
+  border-radius:9999px;padding:.22rem;gap:.08rem;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.tab-btn{
+  padding:.44rem 1.25rem;font-size:.8rem;font-weight:700;letter-spacing:.02em;
+  color:rgba(255,255,255,.38);transition:all .22s;border-radius:9999px;
+}
+.tab-btn.active{color:#fff;background:rgba(177,140,255,.28);box-shadow:0 2px 14px rgba(177,140,255,.22)}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,.72);background:rgba(255,255,255,.07)}
+
+/* ── MAIN ── */
+#main{max-width:54rem;margin:0 auto;padding:1.5rem 1.25rem}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* shared glass card */
+.gcard{background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--gbd);border-radius:1.5rem}
+
+/* ── VOCAB TAB ── */
+#dz{
+  border-radius:1.75rem;
+  background:rgba(255,255,255,.04);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  cursor:pointer;transition:background .3s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1rem;padding:3.5rem 2rem;text-align:center;position:relative;
+}
+#dz::before{
+  content:'';position:absolute;inset:0;border-radius:1.75rem;
+  padding:1px;
+  background:linear-gradient(135deg,rgba(177,140,255,.35),rgba(0,217,176,.2),rgba(177,140,255,.15));
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;transition:background .3s;
+}
+#dz:hover,#dz.over{background:rgba(177,140,255,.08)}
+#dz:hover::before,#dz.over::before{
+  background:linear-gradient(135deg,rgba(177,140,255,.82),rgba(0,217,176,.58),rgba(255,133,224,.46));
+}
+.dz-icon{opacity:.65;transition:opacity .25s;margin-bottom:.1rem}
+#dz:hover .dz-icon,#dz.over .dz-icon{opacity:1}
+.dz-title{font-size:1.05rem;font-weight:700;color:rgba(255,255,255,.88);letter-spacing:-.01em}
+.dz-sub{font-size:.76rem;font-weight:500;color:rgba(255,255,255,.3);letter-spacing:.02em}
+#img-area{display:none}#img-area.on{display:block}
+.img-card{
+  position:relative;border-radius:1.5rem;overflow:hidden;
+  box-shadow:0 16px 56px rgba(0,0,0,.6);max-width:44rem;margin:0 auto;
+  border:1px solid var(--gbd);
+}
+#img-wrap{position:relative;display:flex;align-items:center;justify-content:center;background:#0d0a1e;min-height:300px}
+#main-img{max-height:78vh;width:100%;object-fit:contain}
+#lbl-root{position:absolute;pointer-events:none;top:0;left:0;width:100%;height:100%}
+#lbl-inner{position:absolute;pointer-events:none}
+.klbl{position:absolute;pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));transition:transform .15s}
+.klbl:hover{transform:scale(1.12) !important}
+.klbl-bubble{border-radius:.9rem;padding:.28rem .65rem .22rem;display:flex;flex-direction:column;align-items:center;border:1.5px solid rgba(255,255,255,.4);backdrop-filter:blur(8px)}
+.klbl-word{font-size:clamp(.9rem,2.3vw,1.3rem);font-weight:900;color:#fff;white-space:nowrap;line-height:1.1}
+.klbl-cn{font-size:clamp(.52rem,1.2vw,.78rem);font-weight:700;color:rgba(255,255,255,.85);white-space:nowrap;margin-top:.03rem}
+#close-btn{
+  position:absolute;top:.85rem;right:.85rem;z-index:50;width:2.2rem;height:2.2rem;border-radius:50%;
+  background:rgba(255,255,255,.12);backdrop-filter:blur(8px);border:1px solid var(--gbd);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+}
+#analyze-wrap{display:none;justify-content:center;margin-top:1.5rem}#analyze-wrap.on{display:flex}
+#analyze-btn{
+  display:flex;align-items:center;gap:.6rem;
+  background:linear-gradient(135deg,var(--coral),var(--pink));color:#fff;
+  padding:.9rem 2.2rem;border-radius:9999px;font-size:.95rem;font-weight:900;
+  box-shadow:0 6px 28px rgba(255,107,138,.55);transition:all .2s;
+}
+#analyze-btn:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 12px 36px rgba(255,107,138,.65)}
+#loading-wrap{display:none;flex-direction:column;align-items:center;gap:.9rem;padding:2.5rem 0}#loading-wrap.on{display:flex}
+.ldots span{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin:0 .16rem;animation:dot 1.2s ease-in-out infinite}
+.ldots span:nth-child(1){background:var(--coral);animation-delay:0s}.ldots span:nth-child(2){background:var(--teal);animation-delay:.2s}.ldots span:nth-child(3){background:var(--purple);animation-delay:.4s}
+@keyframes dot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1.3);opacity:1}}
+.ltxt{font-size:.9rem;font-weight:700;color:var(--text-sub)}
+#vocab-results{display:none;margin-top:1.5rem}#vocab-results.on{display:block;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.owl-panel{
+  display:flex;align-items:flex-start;gap:1rem;
+  background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:1.5rem;padding:1.25rem;
+  box-shadow:0 4px 28px rgba(0,0,0,.25);margin-bottom:1.5rem;border:1px solid var(--gbd);
+}
+.owl-avatar{font-size:2.4rem;flex-shrink:0;margin-top:.15rem;filter:drop-shadow(0 0 10px rgba(177,140,255,.5))}
+.owl-lbl{font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;color:var(--teal);margin-bottom:.3rem}
+.cards-lbl{
+  font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.18em;
+  color:rgba(255,255,255,.3);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem;
+}
+.cards-lbl::before,.cards-lbl::after{content:'';flex:1;height:1px;background:var(--gbd)}
+#word-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:.9rem}
+@media(max-width:480px){#word-cards{grid-template-columns:1fr}}
+.wcard{
+  background:var(--g);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:1.25rem;padding:1.1rem;border:1px solid var(--gbd);
+  transition:all .2s;cursor:pointer;position:relative;overflow:hidden;
+}
+.wcard:hover{transform:translateY(-4px);background:var(--gb);box-shadow:0 10px 36px rgba(0,0,0,.35)}
+.wcard-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.3rem;margin-top:.35rem}
+.wcard-word{font-size:1.3rem;font-weight:900;color:#fff}
+.wcard-spk{
+  width:2rem;height:2rem;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;flex-shrink:0;border:1px solid var(--gbd);
+  color:rgba(255,255,255,.55);transition:all .15s;
+}
+.wcard-spk:hover{border-color:var(--sun);color:var(--sun);transform:scale(1.1)}
+.wcard-ph{font-size:.72rem;font-weight:600;color:rgba(255,255,255,.38);margin-bottom:.3rem}
+.wcard-ex{font-size:.82rem;font-weight:600;color:rgba(255,255,255,.52);line-height:1.55}
+.story-abtn{
+  display:flex;align-items:center;gap:.5rem;margin-top:.9rem;
+  background:linear-gradient(135deg,var(--teal),#00aa85);color:#fff;
+  padding:.62rem 1.2rem;border-radius:9999px;font-size:.85rem;font-weight:900;
+  box-shadow:0 3px 14px rgba(0,217,176,.35);transition:all .2s;
+}
+.story-abtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,217,176,.45)}
+.story-abtn:disabled{opacity:.35;cursor:not-allowed}
+.story-abtn.playing{background:linear-gradient(135deg,var(--coral),var(--pink));box-shadow:0 3px 14px rgba(255,107,138,.35)}
+
+/* ── karaoke word highlight ── */
+.sw{display:inline;border-radius:.28em;padding:.04em .05em;transition:color .08s,background .1s,text-shadow .1s;color:rgba(255,255,255,.38)}
+.sw.past{color:rgba(255,255,255,.58)}
+.sw.sw-on{color:#fff;background:rgba(177,140,255,.3);text-shadow:0 0 18px rgba(177,140,255,.7);padding:.04em .18em;border-radius:.35em}
+
+/* ── STORY TAB ── */
+.voice-hero{
+  text-align:center;padding:1.75rem 1rem 1.5rem;
+  background:var(--g);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:1.5rem;margin-bottom:1.25rem;border:1px solid var(--gbd);
+}
+.voice-hero p{font-size:.88rem;font-weight:700;color:var(--text-sub);margin-bottom:1.25rem}
+#mic-btn{
+  width:5.5rem;height:5.5rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--coral),var(--pink));color:#fff;font-size:2.2rem;
+  display:inline-flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 28px rgba(255,107,138,.6);transition:all .25s;
+}
+#mic-btn:hover{transform:scale(1.08)}
+#mic-btn.listening{animation:micPulse 1.3s ease-in-out infinite}
+@keyframes micPulse{0%{box-shadow:0 0 0 0 rgba(255,107,138,.8)}70%{box-shadow:0 0 0 22px rgba(255,107,138,0)}100%{box-shadow:0 0 0 0 rgba(255,107,138,0)}}
+#mic-hint{font-size:.9rem;font-weight:800;color:var(--pink);margin-top:.75rem;min-height:1.3rem}
+#transcript-box{
+  background:rgba(255,255,255,.07);border-radius:1.2rem;padding:.85rem 1rem;
+  border:1px solid var(--gbd);margin:.9rem 0;display:none;
+}
+#transcript-box.on{display:block}
+.tbox-lbl{font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;color:var(--sun);margin-bottom:.3rem}
+.story-input-row{display:flex;gap:.6rem;margin-bottom:1.25rem}
+#story-topic{
+  flex:1;padding:.68rem 1rem;border:1px solid var(--gbd);border-radius:1rem;
+  font-size:.9rem;font-family:'Nunito',sans-serif;font-weight:700;outline:none;
+  background:var(--g);color:#fff;transition:border .15s;
+}
+#story-topic::placeholder{color:rgba(255,255,255,.22)}
+#story-topic:focus{border-color:var(--purple)}
+#gen-btn{
+  padding:.68rem 1.4rem;
+  background:linear-gradient(135deg,var(--purple),var(--sky));color:#fff;
+  border-radius:1rem;font-size:.88rem;font-weight:900;
+  box-shadow:0 4px 16px rgba(177,140,255,.45);transition:all .2s;white-space:nowrap;
+}
+#gen-btn:hover{transform:translateY(-2px)}#gen-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* character row */
+#char-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.char-chip{
+  display:flex;align-items:center;gap:.35rem;padding:.4rem .9rem;border-radius:9999px;
+  border:1px solid var(--gbd);font-size:.82rem;font-weight:800;cursor:pointer;
+  transition:all .18s;background:var(--g);color:rgba(255,255,255,.65);
+}
+.char-chip:hover{transform:scale(1.06);background:var(--gb);color:#fff}
+.char-emoji{font-size:1.15rem}
+.char-voice-indicator{width:.45rem;height:.45rem;border-radius:50%;margin-left:.2rem;background:var(--teal)}
+.char-voice-indicator.speaking{animation:blink .5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* comic panels */
+#comic-area{display:none}#comic-area.on{display:block;animation:fadeUp .35s ease}
+#comic-loading{display:none;text-align:center;padding:2.5rem 0}#comic-loading.on{display:block}
+.comic-title-wrap{text-align:center;margin-bottom:1.25rem}
+.comic-title-zh{font-size:1.4rem;font-weight:900;color:#fff;text-shadow:0 0 22px rgba(177,140,255,.45)}
+.comic-title-en{font-size:.85rem;font-weight:700;color:var(--text-sub);margin-top:.2rem}
+.comic-strip{display:flex;flex-direction:column;gap:1.5rem}
+
+.comic-panel{
+  background:var(--g);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:1.5rem;overflow:hidden;
+  box-shadow:0 8px 36px rgba(0,0,0,.4);border:1px solid var(--gbd);
+}
+.panel-img-wrap{position:relative;width:100%;background:#0c0a1a;min-height:220px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.panel-img{width:100%;display:block}
+.panel-placeholder{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:4rem;background:rgba(255,255,255,.03)}
+
+/* ── SPEECH BUBBLES ── */
+.bubble-layer{position:absolute;inset:0;pointer-events:none;z-index:20}
+.bubble{
+  position:absolute;pointer-events:auto;cursor:pointer;
+  background:rgba(255,255,255,.94);
+  border-radius:14px 14px 14px 4px;padding:5px 9px 4px;
+  border:2px solid rgba(255,255,255,.5);max-width:46%;min-width:76px;
+  box-shadow:0 4px 18px rgba(0,0,0,.3);transition:transform .15s,box-shadow .15s;user-select:none;
+}
+.bubble.right-bubble{border-radius:14px 14px 4px 14px}
+.bubble:hover{transform:scale(1.06) translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.bubble.speaking{animation:bubblePop .3s ease;box-shadow:0 0 0 3px rgba(177,140,255,.5)}
+@keyframes bubblePop{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1.06) translateY(-2px)}}
+.bubble-tail{position:absolute;bottom:-12px;left:14px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent}
+.bubble-tail.right{left:auto;right:14px}
+.bubble-tail-inner{position:absolute;bottom:-8px;left:16px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid rgba(255,255,255,.94)}
+.bubble-tail-inner.right{left:auto;right:16px}
+.bubble-char{font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px;display:flex;align-items:center;gap:.25rem}
+.bubble-text{font-size:clamp(.7rem,1.9vw,.9rem);font-weight:800;line-height:1.35;color:#0d0a1e}
+.bubble-cn{font-size:clamp(.52rem,1.2vw,.68rem);font-weight:600;color:#777;margin-top:2px;line-height:1.3}
+.bubble-speaker-dot{width:.42rem;height:.42rem;border-radius:50%;display:inline-block;flex-shrink:0}
+
+.panel-num-bar{padding:.55rem 1.1rem;border-top:1px solid var(--gbd);font-size:.62rem;font-weight:800;color:rgba(255,255,255,.25);letter-spacing:.1em;text-transform:uppercase}
+
+/* read all btn */
+#read-all-btn{
+  display:flex;align-items:center;justify-content:center;gap:.6rem;
+  width:100%;margin-top:1.5rem;
+  background:linear-gradient(135deg,var(--sun),#FF9800);color:#111;
+  padding:1rem;border-radius:9999px;font-size:.95rem;font-weight:900;
+  box-shadow:0 6px 26px rgba(255,217,61,.5);transition:all .2s;
+}
+#read-all-btn:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(255,217,61,.6)}
+#read-all-btn:disabled{opacity:.35;cursor:not-allowed}
+#read-all-btn.playing{background:linear-gradient(135deg,var(--coral),var(--pink));color:#fff;box-shadow:0 6px 26px rgba(255,107,138,.5)}
+
+/* ── CHAT SECTION ── */
+#chat-section{
+  margin-top:1.5rem;background:var(--g);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:1.5rem;overflow:hidden;
+  box-shadow:0 8px 36px rgba(0,0,0,.3);border:1px solid var(--gbd);display:none;
+}
+#chat-section.on{display:block;animation:fadeUp .35s ease}
+.chat-hdr{background:rgba(177,140,255,.08);padding:1rem 1.25rem .85rem;border-bottom:1px solid var(--gbd)}
+.chat-hdr h3{font-size:1rem;font-weight:900;color:#fff}
+.chat-hdr p{font-size:.75rem;font-weight:700;color:var(--text-sub);margin-top:.15rem}
+.chat-pills{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.75rem}
+.chat-pill{
+  display:flex;align-items:center;gap:.3rem;padding:.35rem .85rem;border-radius:9999px;
+  border:1.5px solid;font-size:.78rem;font-weight:800;transition:all .2s;
+  opacity:.45;background:transparent;
+}
+.chat-pill.active{opacity:1;transform:scale(1.07);box-shadow:0 3px 14px rgba(0,0,0,.25)}
+.chat-pill:hover{opacity:.8}
+#chat-log{max-height:420px;overflow-y:auto;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.85rem;scroll-behavior:smooth}
+.cmsg{display:flex;align-items:flex-end;gap:.5rem;animation:fadeUp .22s ease}
+.cmsg.user-msg{flex-direction:row-reverse}
+.cmsg-av{font-size:1.65rem;line-height:1;flex-shrink:0}
+.cmsg-body{display:flex;flex-direction:column;max-width:74%}
+.cmsg.user-msg .cmsg-body{align-items:flex-end}
+.cmsg-name{font-size:.58rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem;padding-left:.2rem;color:rgba(255,255,255,.3)}
+.cmsg-bubble{display:inline-block;padding:.55rem .95rem;border-radius:1.1rem;font-size:.9rem;font-weight:700;line-height:1.5;word-break:break-word}
+.cmsg:not(.user-msg) .cmsg-bubble{background:rgba(255,255,255,.09);color:#fff;border-radius:1.1rem 1.1rem 1.1rem .3rem;border:1px solid var(--gbd)}
+.cmsg.user-msg .cmsg-bubble{background:linear-gradient(135deg,var(--purple),var(--sky));color:#fff;border-radius:1.1rem 1.1rem .3rem 1.1rem;box-shadow:0 3px 14px rgba(177,140,255,.4)}
+.chat-dots{display:flex;align-items:center;gap:.22rem;padding:.45rem .75rem;background:rgba(255,255,255,.09);border-radius:1rem;width:fit-content;border:1px solid var(--gbd)}
+.chat-dots span{width:.42rem;height:.42rem;border-radius:50%;background:rgba(255,255,255,.45);display:inline-block;animation:dot 1.2s ease-in-out infinite}
+.chat-dots span:nth-child(2){animation-delay:.2s}.chat-dots span:nth-child(3){animation-delay:.4s}
+.chat-irow{display:none;align-items:center;gap:.5rem;padding:.85rem 1rem;border-top:1px solid var(--gbd);background:rgba(0,0,0,.25)}
+.chat-irow.on{display:flex}
+#chat-text{
+  flex:1;padding:.6rem 1.1rem;border:1px solid var(--gbd);border-radius:9999px;
+  font-size:.9rem;font-family:'Nunito',sans-serif;font-weight:700;outline:none;
+  background:var(--g);color:#fff;transition:border .15s;
+}
+#chat-text::placeholder{color:rgba(255,255,255,.22)}
+#chat-text:focus{border-color:var(--purple)}
+#chat-mic-btn{
+  width:2.8rem;height:2.8rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--coral),var(--pink));color:#fff;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 3px 14px rgba(255,107,138,.45);transition:all .2s;
+}
+#chat-mic-btn.listen{animation:micPulse 1.3s ease-in-out infinite}
+#chat-send{
+  width:2.8rem;height:2.8rem;border-radius:50%;
+  background:linear-gradient(135deg,var(--purple),var(--sky));color:#fff;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 3px 14px rgba(177,140,255,.45);transition:all .2s;
+}
+#chat-send:hover,#chat-mic-btn:hover{transform:scale(1.1)}
+
+/* ── TOAST / UTIL ── */
+.star-burst{position:fixed;pointer-events:none;font-size:1.5rem;animation:starFly .8s ease-out forwards;z-index:999}
+@keyframes starFly{0%{transform:translate(-50%,-50%) scale(0);opacity:1}100%{transform:translate(-50%,-130%) scale(1.5);opacity:0}}
+#toast{
+  position:fixed;bottom:1.5rem;left:50%;
+  transform:translateX(-50%) translateY(3rem);
+  background:rgba(4,2,12,.88);backdrop-filter:blur(14px);color:#fff;
+  padding:.65rem 1.5rem;border-radius:9999px;
+  font-size:.9rem;font-weight:900;border:1px solid var(--gbd);
+  box-shadow:0 6px 24px rgba(0,0,0,.4);
+  z-index:998;transition:transform .35s cubic-bezier(.175,.885,.32,1.275);pointer-events:none;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+.err-box{display:none;background:rgba(255,107,138,.1);border-radius:1.25rem;padding:1.1rem;text-align:center;border:1px solid rgba(255,107,138,.4);margin-top:1.25rem}
+.err-box.on{display:block}.err-box p{font-weight:800;color:var(--coral);font-size:.9rem}
+</style>
+</head>
+<body>
+<canvas id="ballpit-canvas"></canvas>
+
+<header>
+  <div class="owl">🦉</div>
+  <div class="header-text">
+    <h1>英语小伙伴</h1>
+    <p>看图学单词，讲故事学英文！📚✨</p>
+  </div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+    <div class="hdr-coin">🪙 <span id="hdr-coin-count">0</span></div>
+    <div class="hdr-nav">
+      <a href="english-games.html">🎮 游戏</a>
+      <a href="blindbox.html">🎁 盲盒</a>
+    </div>
+    <button onclick="showKey()" style="font-size:1.2rem;opacity:.7" title="API Key">🔑</button>
+  </div>
+</header>
+
+<div id="key-bar">
+  <label for="key-input">🔑 Gemini API Key</label>
+  <input type="password" id="key-input" placeholder="AIza…" autocomplete="off"/>
+  <button id="key-save" onclick="saveKey()">保存</button>
+</div>
+
+<div class="tabs">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('vocab')" id="tab-vocab">看图识字</button>
+    <button class="tab-btn" onclick="switchTab('story')" id="tab-story">故事时间</button>
+  </div>
+</div>
+
+<main id="main">
+
+<!-- ══ TAB 1 · 看图识字 ══ -->
+<div class="tab-pane active" id="pane-vocab">
+  <div id="dz">
+    <input type="file" id="file-inp" accept="image/*" style="display:none"/>
+    <div class="dz-icon">
+      <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
+        <rect x="6" y="16" width="42" height="30" rx="5" stroke="rgba(177,140,255,.7)" stroke-width="1.6"/>
+        <circle cx="19" cy="26" r="4.5" stroke="rgba(177,140,255,.7)" stroke-width="1.6"/>
+        <path d="M6 36L18 25l10 9 9-9 11 10" stroke="rgba(177,140,255,.7)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M34 6v16M30 10l4-4 4 4" stroke="rgba(0,217,176,.75)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <p class="dz-title">把图片拖到这里</p>
+    <p class="dz-sub">JPG · PNG · WEBP &nbsp;·&nbsp; 或点击上传</p>
+  </div>
+  <div id="img-area">
+    <div class="img-card">
+      <div id="img-wrap">
+        <img id="main-img" src="" alt=""/>
+        <div id="lbl-root"><div id="lbl-inner"></div></div>
+      </div>
+      <button id="close-btn" onclick="resetVocab()" title="换图">✕</button>
+    </div>
+    <div id="analyze-wrap"><button id="analyze-btn" onclick="analyze()">✨ 认识这张图的单词！</button></div>
+    <div id="loading-wrap"><div class="ldots"><span></span><span></span><span></span></div><p class="ltxt">🔍 小伙伴正在认真看图…</p></div>
+    <div id="vocab-results">
+      <div class="owl-panel">
+        <div class="owl-avatar">🦉</div>
+        <div style="flex:1">
+          <p class="owl-lbl">小伙伴说</p>
+          <h2 id="scene-title" style="font-size:1.2rem;font-weight:900;margin-bottom:.5rem"></h2>
+          <p id="story-text" style="font-size:1rem;font-weight:700;color:#555;line-height:1.65"></p>
+          <p id="story-zh" style="font-size:.85rem;font-weight:600;color:#aaa;margin-top:.4rem;line-height:1.6"></p>
+          <button class="story-abtn" id="story-btn" onclick="toggleVStory()">
+            <span id="story-icon">▶</span><span id="story-txt">听小伙伴朗读 🎵</span>
+          </button>
+        </div>
+      </div>
+      <div class="cards-lbl">今天学到的单词</div>
+      <div id="word-cards"></div>
+    </div>
+    <div class="err-box" id="err-box"><p id="err-txt"></p></div>
+  </div>
+</div>
+
+<!-- ══ TAB 2 · 故事时间 ══ -->
+<div class="tab-pane" id="pane-story">
+
+  <div class="voice-hero">
+    <p>和小伙伴说说，你想听什么故事？🌟</p>
+    <button id="mic-btn" onclick="toggleMic()">🎤</button>
+    <p id="mic-hint">点我开始说话</p>
+  </div>
+
+  <div id="transcript-box">
+    <div class="tbox-lbl">你说的是</div>
+    <p id="transcript-text" style="font-size:1rem;font-weight:700;color:var(--text);line-height:1.5"></p>
+  </div>
+
+  <div class="story-input-row">
+    <input id="story-topic" type="text" placeholder="或者打字：小兔子和小熊去探险…" maxlength="60"/>
+    <button id="gen-btn" onclick="generateStory()">✨ 生成故事</button>
+  </div>
+
+  <div id="comic-loading">
+    <div class="ldots"><span></span><span></span><span></span></div>
+    <p class="ltxt" id="comic-ltxt">✍️ 正在构思故事…</p>
+  </div>
+
+  <div id="comic-area">
+    <div class="comic-title-wrap">
+      <p class="comic-title-zh" id="comic-title-zh"></p>
+      <p class="comic-title-en" id="comic-title-en"></p>
+    </div>
+    <!-- character chips -->
+    <div id="char-row"></div>
+    <!-- panels -->
+    <div class="comic-strip" id="comic-strip"></div>
+    <button id="read-all-btn" onclick="readAllStory()">
+      <span id="read-icon">▶</span>
+      <span id="read-txt">一起来读故事！🎵</span>
+    </button>
+
+    <!-- ══ CHAT WITH CHARACTERS ══ -->
+    <div id="chat-section">
+      <div class="chat-hdr">
+        <h3>💬 进入故事，和角色聊天！</h3>
+        <p>选一个角色 — 用中文或英文都可以，他会用英文陪你聊 ✨</p>
+        <div class="chat-pills" id="chat-pills"></div>
+      </div>
+      <div id="chat-log"></div>
+      <div class="chat-irow" id="chat-irow">
+        <button id="chat-mic-btn" onclick="toggleChatMic()">🎤</button>
+        <input id="chat-text" type="text" placeholder="打字或按麦克风说话…" maxlength="120"/>
+        <button id="chat-send" onclick="sendChatMsg()">➤</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="err-box" id="comic-err"><p id="comic-err-txt"></p></div>
+</div>
+
+</main>
+<div id="toast"></div>
+
+<script>
+// ── CONSTANTS ──
+const COLORS=['#FF6B6B','#4ECDC4','#FFB347','#C9B8FF','#A8E6CF','#FF8B94'];
+const CHAR_EMOJIS=['🐰','🐻','🦊','🐸','🐨','🦁','🐯','🐼'];
+// Voices for characters — different personalities
+const CHAR_VOICES=['Puck','Leda','Achird','Umbriel'];
+
+// ── CURATED ART STYLES (high-quality, child-friendly) ──
+const ART_STYLES=[
+  'Disney 2D animated movie style, expressive characters with large bright eyes, jewel-toned vibrant colors, soft magical lighting, cinematic warmth, professional Disney illustration quality',
+  'Studio Ghibli style, hand-painted watercolor backgrounds, soft pastel tones, gentle warm sunlight, lush whimsical environments, dreamy hand-drawn animation feel',
+  'Pixar-inspired 3D animation style, polished bright colors, warm cinematic lighting, adorable expressive characters, rich detailed environments, magical storybook atmosphere',
+  'modern premium children\'s picture book illustration, clean flat vector art, harmonious pastel rainbow palette, kawaii cute rounded shapes, bold clean outlines, professional editorial quality'
+];
+
+// ── COIN SYSTEM ──
+const COIN_KEY='eb_coins';
+let _coins=parseInt(localStorage.getItem(COIN_KEY)||'30');
+function saveCoins(){localStorage.setItem(COIN_KEY,_coins);}
+function earnCoins(n,label){
+  _coins+=n;saveCoins();
+  document.getElementById('hdr-coin-count').textContent=_coins;
+  if(label)showToast(`🪙 +${n} 金币！${label}`);
+}
+(()=>{if(!localStorage.getItem(COIN_KEY)){localStorage.setItem(COIN_KEY,'30');}document.getElementById('hdr-coin-count').textContent=_coins;})();
+
+// ── API KEY ──
+let apiKey=localStorage.getItem('bk')||'';
+const keyBar=document.getElementById('key-bar');
+const keyInput=document.getElementById('key-input');
+if(apiKey){keyInput.value=apiKey;keyBar.classList.add('gone');}
+function saveKey(){apiKey=keyInput.value.trim();localStorage.setItem('bk',apiKey);keyBar.classList.add('gone');}
+function showKey(){keyBar.classList.remove('gone');keyInput.focus();}
+keyInput.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey();});
+
+// ── TABS ──
+function switchTab(t){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+t).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// ════════════════════════════════════
+// TAB 1 · 看图识字
+// ════════════════════════════════════
+const V={b64:null,mime:'image/jpeg',results:null,audio:null,audioUrl:null,audioState:'idle'};
+const dz=document.getElementById('dz');
+const fileInp=document.getElementById('file-inp');
+dz.addEventListener('click',()=>fileInp.click());
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadFile(f);});
+fileInp.addEventListener('change',()=>{if(fileInp.files[0])loadFile(fileInp.files[0]);});
+
+function loadFile(f){
+  const r=new FileReader();
+  r.onload=()=>{
+    V.b64=r.result.split(',')[1];V.mime=f.type||'image/jpeg';
+    document.getElementById('main-img').src=r.result;
+    dz.style.display='none';show('img-area');show('analyze-wrap');
+    ['loading-wrap','vocab-results'].forEach(hide);
+    document.getElementById('err-box').classList.remove('on');
+    document.getElementById('lbl-inner').innerHTML='';
+    clearVAudio();V.results=null;
+  };
+  r.readAsDataURL(f);
+}
+function resetVocab(){
+  dz.style.display='';document.getElementById('img-area').classList.remove('on');
+  ['analyze-wrap','loading-wrap','vocab-results'].forEach(hide);
+  document.getElementById('err-box').classList.remove('on');
+  document.getElementById('lbl-inner').innerHTML='';
+  clearVAudio();V.results=null;V.b64=null;fileInp.value='';
+}
+function clearVAudio(){if(V.audio){V.audio.pause();V.audio=null;}if(V.audioUrl){URL.revokeObjectURL(V.audioUrl);V.audioUrl=null;}V.audioState='idle';}
+
+function overlayBounds(){
+  const img=document.getElementById('main-img');const wrap=document.getElementById('img-wrap');if(!img.naturalWidth)return null;
+  const r=wrap.getBoundingClientRect();const nat=img.naturalWidth/img.naturalHeight,dis=r.width/r.height;
+  let w,h,t,l;if(dis>nat){h=r.height;w=h*nat;t=0;l=(r.width-w)/2;}else{w=r.width;h=w/nat;l=0;t=(r.height-h)/2;}
+  return{w,h,t,l};
+}
+function updateOverlay(){
+  const b=overlayBounds();if(!b)return;
+  const inner=document.getElementById('lbl-inner');
+  inner.style.cssText=`width:${b.w}px;height:${b.h}px;top:${b.t}px;left:${b.l}px`;
+  if(V.results)renderVLabels(V.results.items);
+}
+new ResizeObserver(updateOverlay).observe(document.getElementById('img-wrap'));
+window.addEventListener('resize',updateOverlay);
+document.getElementById('main-img').addEventListener('load',()=>setTimeout(updateOverlay,60));
+
+async function analyze(){
+  if(!V.b64)return;if(!apiKey){showKey();return;}
+  hide('analyze-wrap');show('loading-wrap');document.getElementById('err-box').classList.remove('on');
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        contents:[{parts:[{inline_data:{mime_type:V.mime,data:V.b64}},{text:`Cheerful English teacher for Chinese kids age 6–12. Choose 5–6 concrete, visible words (A1–B1), mix nouns/verbs/adj. Prefer interesting words. For each: English, IPA phonetic, part of speech, Chinese, simple example (max 8 words), bounding box (ymin/xmin/ymax/xmax 0–1000). Also: 2-sentence fun scene description EN+ZH, short title. JSON only.`}]}],
+        generationConfig:{responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{title:{type:'STRING'},description:{type:'OBJECT',properties:{english:{type:'STRING'},chinese:{type:'STRING'}},required:['english','chinese']},items:{type:'ARRAY',items:{type:'OBJECT',properties:{english:{type:'STRING'},phonetic:{type:'STRING'},partOfSpeech:{type:'STRING'},chinese:{type:'STRING'},example:{type:'STRING'},boundingBox:{type:'OBJECT',properties:{ymin:{type:'NUMBER'},xmin:{type:'NUMBER'},ymax:{type:'NUMBER'},xmax:{type:'NUMBER'}},required:['ymin','xmin','ymax','xmax']}},required:['english','phonetic','partOfSpeech','chinese','example','boundingBox']}}},required:['items','description','title']}}
+      })}
+    );
+    const d=await res.json();if(d.error)throw new Error(d.error.message);
+    V.results=JSON.parse(d.candidates?.[0]?.content?.parts?.[0]?.text||'{}');
+    renderVResults(V.results);
+  }catch(e){document.getElementById('err-txt').textContent='哎呀出错了 😅 '+e.message;document.getElementById('err-box').classList.add('on');show('analyze-wrap');}
+  finally{hide('loading-wrap');}
+}
+function renderVResults(d){
+  document.getElementById('scene-title').textContent=d.title||'';
+  const eng=(d.description?.english||'');
+  const words=eng.split(/(\s+)/).filter(s=>s.trim());
+  V.wordCount=words.length;
+  document.getElementById('story-text').innerHTML=words.map((w,i)=>`<span class="sw" data-i="${i}">${esc(w)}</span>`).join(' ');
+  document.getElementById('story-zh').textContent=d.description?.chinese||'';
+  setVStoryBtn('idle');
+  document.getElementById('word-cards').innerHTML=(d.items||[]).map((item,i)=>{
+    const c=COLORS[i%COLORS.length];
+    return`<div class="wcard" style="border-color:${c}25" onclick="speakFeedback('${esc(item.english)}',event)">
+      <div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:1.5rem 1.5rem 0 0;background:${c}"></div>
+      <div class="wcard-top"><div><div class="wcard-word" style="color:${c}">${esc(item.english)}</div><div class="wcard-ph">${esc(item.phonetic)}</div></div>
+      <button class="wcard-spk" style="color:${c}" onclick="event.stopPropagation();speakWord('${esc(item.english)}')">🔊</button></div>
+      <p style="margin-bottom:.35rem"><span style="font-size:.7rem;font-weight:700;margin-right:.2rem;opacity:.7;font-style:italic">${esc(item.partOfSpeech)}</span><span style="font-size:.95rem;font-weight:800">${esc(item.chinese)}</span></p>
+      <p class="wcard-ex">${esc(item.example)}</p>
+    </div>`;
+  }).join('');
+  show('vocab-results');setTimeout(updateOverlay,80);
+  const wc=(d.items||[]).length;if(wc>0)earnCoins(wc*2,`学了${wc}个新单词！`);
+}
+function renderVLabels(items){
+  const inner=document.getElementById('lbl-inner');inner.innerHTML='';
+  const placed=[];
+  items.map((item,idx)=>{
+    const cx=(item.boundingBox.xmin+item.boundingBox.xmax)/20;const cy=(item.boundingBox.ymin+item.boundingBox.ymax)/20;
+    const lw=Math.max(20,Math.min(38,item.english.length*2+item.chinese.length*2.5));const lh=14;
+    let bx=cx,by=cy,found=false;
+    for(const dist of[22,32,44,56]){
+      const angles=Array.from({length:24},(_,i)=>i*Math.PI*2/24).sort(()=>Math.random()-.5);
+      for(const a of angles){
+        const tx=Math.max(lw/2+2,Math.min(98-lw/2,cx+Math.cos(a)*dist));const ty=Math.max(lh/2+2,Math.min(98-lh/2,cy+Math.sin(a)*dist));
+        if(!placed.some(p=>Math.abs(p.x-tx)<(p.w+lw)*.45&&Math.abs(p.y-ty)<(p.h+lh)*.45)){bx=tx;by=ty;found=true;break;}
+      }if(found)break;
+    }
+    placed.push({x:bx,y:by,w:lw,h:lh});
+    return{...item,x:bx,y:by,cx,cy,color:COLORS[idx%COLORS.length]};
+  }).forEach((item,idx)=>{
+    const{x,y,cx,cy,color}=item;
+    const wrap=document.createElement('div');wrap.style.cssText=`position:absolute;top:0;left:0;width:100%;height:100%;z-index:${100-idx};pointer-events:none;opacity:0;transition:opacity .4s ${idx*.1}s`;
+    const NS='http://www.w3.org/2000/svg';const svg=document.createElementNS(NS,'svg');svg.setAttribute('viewBox','0 0 100 100');svg.setAttribute('preserveAspectRatio','none');svg.style.cssText='position:absolute;inset:0;width:100%;height:100%';
+    const line=document.createElementNS(NS,'line');line.setAttribute('x1',x);line.setAttribute('y1',y);line.setAttribute('x2',cx);line.setAttribute('y2',cy);line.setAttribute('stroke',color);line.setAttribute('stroke-width','0.6');line.setAttribute('stroke-dasharray','1.5 1.5');line.setAttribute('stroke-linecap','round');
+    const dot=document.createElementNS(NS,'circle');dot.setAttribute('cx',cx);dot.setAttribute('cy',cy);dot.setAttribute('r','1.2');dot.setAttribute('fill',color);
+    svg.appendChild(line);svg.appendChild(dot);wrap.appendChild(svg);
+    const lbl=document.createElement('div');lbl.className='klbl';lbl.style.cssText=`left:${x}%;top:${y}%;transform:translate(-50%,-50%);pointer-events:auto`;
+    lbl.innerHTML=`<div class="klbl-bubble" style="background:${color}"><span class="klbl-word">${esc(item.english)}</span><span class="klbl-cn">${esc(item.chinese)}</span></div>`;
+    lbl.onclick=()=>speakFeedback(item.english,{clientX:0,clientY:0});
+    wrap.appendChild(lbl);inner.appendChild(wrap);setTimeout(()=>wrap.style.opacity='1',20);
+  });
+}
+let _kRaf=null;
+function _kStop(){
+  if(_kRaf){cancelAnimationFrame(_kRaf);_kRaf=null;}
+  document.querySelectorAll('#story-text .sw').forEach(s=>{s.className='sw';});
+}
+function _kStart(audio,n){
+  _kStop();
+  function tick(){
+    if(!audio||audio.paused||audio.ended){_kStop();return;}
+    const dur=audio.duration||1,t=audio.currentTime;
+    // linear estimate — proportional to time elapsed
+    const idx=Math.min(n-1,Math.floor(t/dur*n));
+    document.querySelectorAll('#story-text .sw').forEach((s,i)=>{
+      s.className='sw'+(i===idx?' sw-on':i<idx?' past':'');
+    });
+    _kRaf=requestAnimationFrame(tick);
+  }
+  _kRaf=requestAnimationFrame(tick);
+}
+
+async function toggleVStory(){
+  if(!V.results)return;
+  if(V.audio&&V.audioUrl){
+    if(V.audioState==='playing'){V.audio.pause();_kStop();V.audioState='paused';setVStoryBtn('paused');}
+    else{V.audio.play().catch(()=>{});_kStart(V.audio,V.wordCount||1);V.audioState='playing';setVStoryBtn('playing');}return;
+  }
+  setVStoryBtn('loading');
+  try{
+    const b64=await geminiTTS(`Warm, gentle, enchanting children's storyteller voice — like reading a magical bedtime story, full of wonder and warmth:\n\n${V.results.description?.english||''}`,'Leda');
+    if(b64){
+      V.audioUrl=makeWav(b64);V.audio=new Audio(V.audioUrl);
+      V.audio.onended=()=>{_kStop();V.audioState='paused';setVStoryBtn('paused');};
+      V.audio.play().catch(()=>{});
+      _kStart(V.audio,V.wordCount||1);
+      V.audioState='playing';setVStoryBtn('playing');
+    }
+  }catch{fallbackTTS(V.results.description?.english||'');setVStoryBtn('idle');}
+}
+function setVStoryBtn(s){
+  V.audioState=s;const btn=document.getElementById('story-btn'),ic=document.getElementById('story-icon'),tx=document.getElementById('story-txt');
+  btn.disabled=s==='loading';btn.classList.toggle('playing',s==='playing');
+  if(s==='loading'){ic.textContent='⏳';tx.textContent='准备中…';}
+  else if(s==='playing'){ic.textContent='⏸';tx.textContent='暂停朗读';}
+  else{ic.textContent='▶';tx.textContent=s==='paused'?'继续朗读 🎵':'听小伙伴朗读 🎵';}
+}
+
+// ════════════════════════════════════
+// TAB 2 · 故事时间
+// ════════════════════════════════════
+let isListening=false;
+let storyData=null;      // full story JSON
+let charMap={};          // name → {color,emoji,voice,index}
+let isReading=false;
+let stopReadFlag=false;
+
+// ── SINGLETON SPEECH RECOGNITION ──
+// One instance for the whole page. Chrome only asks permission once per instance.
+let _SR=null,_srBusy=false,_srFinalCb=null,_srInterimCb=null;
+
+function _getSR(){
+  if(_SR)return _SR;
+  const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SRC)return null;
+  _SR=new SRC();
+  _SR.lang='zh-CN';_SR.continuous=false;_SR.interimResults=true;_SR.maxAlternatives=1;
+  _SR.onresult=e=>{
+    const t=Array.from(e.results).map(r=>r[0].transcript).join('');
+    if(_srInterimCb)_srInterimCb(t);
+    if(e.results[e.results.length-1].isFinal){
+      _srBusy=false;const cb=_srFinalCb;_srFinalCb=null;_srInterimCb=null;if(cb)cb(t);
+    }
+  };
+  _SR.onerror=e=>{if(e.error!=='no-speech'){_srBusy=false;_srFinalCb=null;_srInterimCb=null;}};
+  _SR.onend=()=>{_srBusy=false;};
+  return _SR;
+}
+function startSR(onFinal,onInterim){
+  const sr=_getSR();if(!sr){showToast('请用 Chrome 浏览器哦 🙏');return false;}
+  if(_srBusy){try{_SR.abort();}catch(e){}_srBusy=false;}
+  _srFinalCb=onFinal;_srInterimCb=onInterim;
+  try{sr.start();_srBusy=true;return true;}catch(e){return false;}
+}
+function stopSR(){
+  if(!_SR||!_srBusy)return;
+  _srBusy=false;_srFinalCb=null;_srInterimCb=null;
+  try{_SR.stop();}catch(e){}
+}
+
+function toggleMic(){
+  if(isListening){
+    isListening=false;
+    document.getElementById('mic-btn').classList.remove('listening');
+    document.getElementById('mic-hint').textContent='点我开始说话';
+    stopSR();return;
+  }
+  const ok=startSR(
+    t=>{
+      isListening=false;
+      document.getElementById('mic-btn').classList.remove('listening');
+      document.getElementById('mic-hint').textContent='点我开始说话';
+      setTimeout(()=>generateStory(),400);
+    },
+    t=>{
+      document.getElementById('transcript-text').textContent=t;
+      document.getElementById('transcript-box').classList.add('on');
+      document.getElementById('story-topic').value=t;
+    }
+  );
+  if(ok){isListening=true;document.getElementById('mic-btn').classList.add('listening');document.getElementById('mic-hint').textContent='正在听…说完自动识别 🎙️';}
+}
+
+async function generateStory(){
+  const topic=document.getElementById('story-topic').value.trim();
+  if(!topic){showToast('先说说想听什么故事！😊');return;}
+  if(!apiKey){showKey();return;}
+  document.getElementById('gen-btn').disabled=true;
+  hide('comic-area');document.getElementById('comic-err').classList.remove('on');
+  show2('comic-loading');document.getElementById('comic-ltxt').textContent='✍️ 正在构思故事…';
+  stopReadFlag=true;isReading=false;
+
+  // Pick one art style for ALL panels — consistency is key
+  const artStyle=ART_STYLES[Math.floor(Math.random()*ART_STYLES.length)];
+
+  try{
+    // ── Step 1: Story structure ──
+    const sr=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        contents:[{parts:[{text:`Create a beautiful, emotionally engaging 3-panel children's story for Chinese kids aged 6–12.
+
+Topic: "${topic}"
+Illustration art style (MUST be used for ALL panels): "${artStyle}"
+
+CRITICAL RULES:
+1. NARRATIVE ARC — three connected panels:
+   Panel 1: Introduce the characters and setting. Show the beginning of their adventure or problem.
+   Panel 2: The exciting middle — a challenge, discovery, or key moment that DIRECTLY continues from Panel 1.
+   Panel 3: A warm, satisfying resolution that ties back to Panels 1 and 2.
+   Each panel's dialogue must reference what happened before ("Remember when...", "We did it!", etc.)
+
+2. CHARACTER CONSISTENCY — for each character write a detailed visual_description (colors, clothing, features, e.g. "Luna: small white rabbit, sky-blue eyes, tiny red bow on ear, rosy cheeks").
+   This EXACT description must appear in EVERY image_prompt.
+
+3. IMAGE PROMPTS — each image_prompt MUST:
+   - Start with: "${artStyle}"
+   - Include: "Characters: [paste exact visual_description of each character in this scene]"
+   - Describe the scene, mood, lighting, and environment in vivid detail
+   - Match the story moment of that panel
+   - End with: "no text, no words, no letters in the image"
+
+4. DIALOGUE — simple natural A1–B1 English, warm and funny, with Chinese translation.
+   2–4 lines per panel. Each line has bubble_side ("left"/"right") and bubble_top (5–80, % from top, spread apart so bubbles don't overlap).
+
+Return JSON matching this schema exactly:
+{
+  story_title: string (Chinese),
+  story_title_en: string (English),
+  characters: [{ name, chinese_name, emoji, trait, visual_description }],
+  panels: [{
+    panel_number,
+    image_prompt,
+    dialogues: [{ character_name, english, chinese, bubble_side, bubble_top }]
+  }]
+}`}]}],
+        generationConfig:{responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{
+          story_title:{type:'STRING'},story_title_en:{type:'STRING'},
+          characters:{type:'ARRAY',items:{type:'OBJECT',properties:{name:{type:'STRING'},chinese_name:{type:'STRING'},emoji:{type:'STRING'},trait:{type:'STRING'},visual_description:{type:'STRING'}},required:['name','chinese_name','emoji','trait','visual_description']}},
+          panels:{type:'ARRAY',items:{type:'OBJECT',properties:{
+            panel_number:{type:'NUMBER'},image_prompt:{type:'STRING'},
+            dialogues:{type:'ARRAY',items:{type:'OBJECT',properties:{
+              character_name:{type:'STRING'},english:{type:'STRING'},chinese:{type:'STRING'},
+              bubble_side:{type:'STRING'},bubble_top:{type:'NUMBER'}
+            },required:['character_name','english','chinese','bubble_side','bubble_top']}}
+          },required:['panel_number','image_prompt','dialogues']}}
+        },required:['story_title','story_title_en','characters','panels']}}
+      })}
+    );
+    const sd=await sr.json();if(sd.error)throw new Error(sd.error.message);
+    storyData=JSON.parse(sd.candidates?.[0]?.content?.parts?.[0]?.text||'{}');
+
+    // Build character map
+    charMap={};
+    (storyData.characters||[]).forEach((c,i)=>{
+      charMap[c.name]={color:COLORS[i%COLORS.length],emoji:c.emoji||CHAR_EMOJIS[i%CHAR_EMOJIS.length],voice:CHAR_VOICES[i%CHAR_VOICES.length],chinese:c.chinese_name,trait:c.trait,index:i};
+    });
+
+    document.getElementById('comic-title-zh').textContent=storyData.story_title||'';
+    document.getElementById('comic-title-en').textContent=storyData.story_title_en||'';
+    renderCharRow();
+    document.getElementById('comic-strip').innerHTML='';
+
+    // ── Step 2: Images ──
+    const panels=storyData.panels||[];
+    for(let i=0;i<panels.length;i++){
+      document.getElementById('comic-ltxt').textContent=`🎨 正在画第 ${i+1} 幅插图（${i+1}/${panels.length}）…`;
+      let imgSrc=null;
+      try{imgSrc=await generateImage(`${panels[i].image_prompt}. Style: cute flat illustration, bright colors, children's book, no text in image`);}
+      catch(e){console.warn('img gen',i,e);}
+      renderPanel(panels[i],i,imgSrc);
+    }
+
+    hide2('comic-loading');show2('comic-area');
+    earnCoins(5,'故事生成！');
+    initChatSection();
+
+  }catch(e){
+    document.getElementById('comic-err-txt').textContent='故事生成出错 😅 '+e.message;
+    document.getElementById('comic-err').classList.add('on');hide2('comic-loading');
+  }finally{document.getElementById('gen-btn').disabled=false;}
+}
+
+function renderCharRow(){
+  const row=document.getElementById('char-row');row.innerHTML='';
+  (storyData.characters||[]).forEach(c=>{
+    const info=charMap[c.name]||{color:COLORS[0],emoji:'🐰',voice:'Puck'};
+    const chip=document.createElement('button');chip.className='char-chip';
+    chip.style.cssText=`background:${info.color}18;border-color:${info.color}`;
+    chip.innerHTML=`<span class="char-emoji">${info.emoji}</span><span style="color:${info.color}">${esc(c.name)}</span><span style="color:#aaa;font-size:.7rem;font-weight:600"> ${esc(c.chinese_name)}</span><span class="char-voice-indicator" style="background:${info.color}" id="cvi-${esc(c.name)}"></span>`;
+    chip.title=`点击听 ${c.name} 说话`;
+    chip.onclick=()=>speakCharLine(c.name,`Hi! I am ${c.name}!`,info.voice);
+    row.appendChild(chip);
+  });
+}
+
+function renderPanel(panel,idx,imgSrc){
+  const div=document.createElement('div');div.className='comic-panel';
+  const imgHtml=imgSrc?`<img class="panel-img" src="${imgSrc}" alt="panel ${idx+1}"/>`:`<div class="panel-placeholder">${['🌟','🌈','🦋'][idx]||'🖼️'}</div>`;
+  div.innerHTML=`
+    <div class="panel-img-wrap" id="pwrap-${idx}">
+      ${imgHtml}
+      <div class="bubble-layer" id="blayer-${idx}"></div>
+    </div>
+    <div class="panel-num-bar">第 ${panel.panel_number} 幅 · Panel ${panel.panel_number}</div>`;
+  document.getElementById('comic-strip').appendChild(div);
+
+  // Wait for image to load then place bubbles
+  const imgEl=div.querySelector('img');
+  if(imgEl){imgEl.onload=()=>placeBubbles(panel,idx);if(imgEl.complete)placeBubbles(panel,idx);}
+  else placeBubbles(panel,idx);
+}
+
+function placeBubbles(panel,idx){
+  const layer=document.getElementById('blayer-'+idx);if(!layer)return;
+  layer.innerHTML='';
+  (panel.dialogues||[]).forEach((d,di)=>{
+    const info=charMap[d.character_name]||{color:COLORS[di%COLORS.length],emoji:'🐰',voice:'Puck'};
+    const isRight=d.bubble_side&&d.bubble_side.includes('right');
+    const top=Math.min(Math.max(d.bubble_top||15+di*22,5),75);
+
+    const bub=document.createElement('div');
+    bub.className='bubble'+(isRight?' right-bubble':'');
+    bub.id=`bub-${idx}-${di}`;
+    bub.style.cssText=`
+      ${isRight?'right:3%;':'left:3%;'}
+      top:${top}%;
+      border-color:${info.color};
+      pointer-events:auto;
+    `;
+    bub.innerHTML=`
+      <div class="bubble-char" style="color:${info.color}">
+        <span class="bubble-speaker-dot" style="background:${info.color}"></span>
+        ${esc(info.emoji)} ${esc(d.character_name)}
+      </div>
+      <p class="bubble-text">${esc(d.english)}</p>
+      <p class="bubble-cn">${esc(d.chinese)}</p>
+      <div class="bubble-tail${isRight?' right':''}" style="border-top-color:${info.color}"></div>
+      <div class="bubble-tail-inner${isRight?' right':''}"></div>
+    `;
+    bub.onclick=(e)=>{
+      e.stopPropagation();
+      speakCharLine(d.character_name,d.english,info.voice,bub);
+    };
+    layer.appendChild(bub);
+  });
+}
+
+// ── Read all story sequentially ──
+async function readAllStory(){
+  if(!storyData)return;
+  if(isReading){
+    stopReadFlag=true;isReading=false;setReadBtn('idle');return;
+  }
+  stopReadFlag=false;isReading=true;setReadBtn('playing');
+  const dialogues=[];
+  (storyData.panels||[]).forEach((panel,pi)=>{
+    (panel.dialogues||[]).forEach((d,di)=>{
+      const info=charMap[d.character_name]||{voice:'Puck',color:COLORS[0]};
+      dialogues.push({text:d.english,voice:info.voice,bubId:`bub-${pi}-${di}`,charName:d.character_name});
+    });
+  });
+
+  for(const d of dialogues){
+    if(stopReadFlag)break;
+    // highlight bubble
+    document.querySelectorAll('.bubble').forEach(b=>b.classList.remove('speaking'));
+    const bub=document.getElementById(d.bubId);
+    if(bub){bub.classList.add('speaking');bub.scrollIntoView({behavior:'smooth',block:'nearest'});}
+    // light up char chip voice indicator
+    const cvi=document.getElementById('cvi-'+d.charName);
+    if(cvi)cvi.classList.add('speaking');
+    try{
+      await playTTSLine(d.text,d.voice);
+    }catch{
+      await playWSLine(d.text);
+    }
+    if(cvi)cvi.classList.remove('speaking');
+    if(bub)bub.classList.remove('speaking');
+    if(stopReadFlag)break;
+  }
+  const _completed=!stopReadFlag;
+  isReading=false;stopReadFlag=false;
+  document.querySelectorAll('.bubble').forEach(b=>b.classList.remove('speaking'));
+  setReadBtn('idle');
+  if(_completed)earnCoins(3,'听完故事！');
+}
+
+function setReadBtn(s){
+  const btn=document.getElementById('read-all-btn'),ic=document.getElementById('read-icon'),tx=document.getElementById('read-txt');
+  btn.disabled=false;btn.classList.toggle('playing',s==='playing');
+  if(s==='playing'){ic.textContent='⏸';tx.textContent='暂停故事';}
+  else{ic.textContent='▶';tx.textContent='一起来读故事！🎵';}
+}
+
+// play one TTS line and await completion
+function playTTSLine(text,voice){
+  return new Promise(async(resolve,reject)=>{
+    try{
+      // Style directive makes the voice expressive and story-like for children
+      const styled=`Speak with a warm, expressive, delightful children's animated-film character voice — full of personality and emotion, like a beloved cartoon friend:\n\n${text}`;
+      const b64=await geminiTTS(styled,voice);
+      if(!b64){resolve();return;}
+      const url=makeWav(b64);const audio=new Audio(url);
+      audio.onended=()=>{URL.revokeObjectURL(url);resolve();};
+      audio.onerror=()=>{URL.revokeObjectURL(url);resolve();};
+      audio.play().catch(()=>resolve());
+    }catch(e){reject(e);}
+  });
+}
+function playWSLine(text){
+  return new Promise(resolve=>{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.88;
+    u.onend=resolve;u.onerror=resolve;
+    speechSynthesis.speak(u);
+  });
+}
+
+async function speakCharLine(charName,text,voice,bubEl){
+  if(bubEl){document.querySelectorAll('.bubble').forEach(b=>b.classList.remove('speaking'));bubEl.classList.add('speaking');}
+  const cvi=document.getElementById('cvi-'+charName);if(cvi)cvi.classList.add('speaking');
+  try{await playTTSLine(text,voice);}
+  catch{await playWSLine(text);}
+  if(cvi)cvi.classList.remove('speaking');
+  if(bubEl)bubEl.classList.remove('speaking');
+}
+
+async function generateImage(prompt){
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({instances:[{prompt}],parameters:{sampleCount:1,aspectRatio:'4:3',personGeneration:'allow_all'}})}
+  );
+  const d=await res.json();if(d.error)throw new Error(d.error.message);
+  const p=d.predictions?.[0];
+  if(p?.bytesBase64Encoded)return`data:${p.mimeType||'image/png'};base64,${p.bytesBase64Encoded}`;
+  return null;
+}
+
+// ── SHARED UTILS ──
+function speakWord(word){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(word);u.lang='en-US';u.rate=0.82;u.pitch=1.1;
+  const v=speechSynthesis.getVoices();
+  const pick=v.find(x=>x.lang.startsWith('en')&&/samantha|karen|kate|google us/i.test(x.name))||v.find(x=>x.lang==='en-US'||x.lang==='en-GB');
+  if(pick)u.voice=pick;speechSynthesis.speak(u);
+}
+function speakFeedback(word,e){
+  speakWord(word);
+  const star=document.createElement('div');star.className='star-burst';
+  star.textContent=['⭐','🌟','✨','💫'][Math.floor(Math.random()*4)];
+  star.style.left=(e.clientX||window.innerWidth/2)+'px';star.style.top=(e.clientY||window.innerHeight/2)+'px';
+  document.body.appendChild(star);setTimeout(()=>star.remove(),900);
+  showToast(['棒棒的！👏','真厉害！🌟','你认识这个词啦！✨','加油！💪','太棒了！🎉'][Math.floor(Math.random()*5)]);
+}
+async function geminiTTS(text,voice){
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      contents:[{parts:[{text}]}],
+      generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}
+    })}
+  );
+  const d=await res.json();if(d.error)throw new Error(d.error.message);
+  return d.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+}
+function makeWav(b64){
+  const bin=atob(b64),len=bin.length,pcm=new Uint8Array(len);
+  for(let i=0;i<len;i++)pcm[i]=bin.charCodeAt(i);
+  const hdr=new ArrayBuffer(44),v=new DataView(hdr);
+  v.setUint32(0,0x52494646,false);v.setUint32(4,36+len,true);v.setUint32(8,0x57415645,false);
+  v.setUint32(12,0x666d7420,false);v.setUint16(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,24000,true);v.setUint32(28,48000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);
+  v.setUint32(36,0x64617461,false);v.setUint32(40,len,true);
+  return URL.createObjectURL(new Blob([hdr,pcm],{type:'audio/wav'}));
+}
+function fallbackTTS(text){const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.85;speechSynthesis.speak(u);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+function show(id){document.getElementById(id).classList.add('on')}
+function hide(id){document.getElementById(id).classList.remove('on')}
+function show2(id){document.getElementById(id).style.display='block'}
+function hide2(id){document.getElementById(id).style.display='none'}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+
+// ════════════════════════════════════
+// CHAT WITH CHARACTERS
+// ════════════════════════════════════
+let chatCharName=null;
+let chatHistory=[];
+let chatListen=false;
+let chatAudio=null;
+let typingN=0;
+
+function initChatSection(){
+  chatCharName=null;chatHistory=[];
+  document.getElementById('chat-log').innerHTML='';
+  document.getElementById('chat-irow').classList.remove('on');
+  const pills=document.getElementById('chat-pills');pills.innerHTML='';
+  (storyData?.characters||[]).forEach(c=>{
+    const info=charMap[c.name]||{color:COLORS[0],emoji:'🐰',voice:'Puck'};
+    const btn=document.createElement('button');
+    btn.className='chat-pill';btn.id='cpill-'+c.name;
+    btn.style.cssText=`border-color:${info.color};color:${info.color}`;
+    btn.innerHTML=`${info.emoji} <span>${esc(c.name)}</span>`;
+    btn.onclick=()=>startChatWith(c.name);
+    pills.appendChild(btn);
+  });
+  document.getElementById('chat-section').classList.add('on');
+}
+
+function startChatWith(name){
+  // stop any playing chat audio
+  if(chatAudio){chatAudio.pause();chatAudio=null;}
+  chatCharName=name;chatHistory=[];
+  document.querySelectorAll('.chat-pill').forEach(p=>p.classList.remove('active'));
+  const pill=document.getElementById('cpill-'+name);if(pill)pill.classList.add('active');
+  const log=document.getElementById('chat-log');log.innerHTML='';
+  document.getElementById('chat-irow').classList.add('on');
+  document.getElementById('chat-text').focus();
+  // opening greeting — warm, story-aware, NOT pushed to chatHistory
+  // (chatHistory must start with a user turn for Gemini alternation rule)
+  const info=charMap[name]||{color:COLORS[0],emoji:'🐰',voice:'Puck'};
+  const greetings=[
+    `Hey hey, it's me, ${name}! I'm SO glad you're here. Did you like our story? What was your favourite part?`,
+    `Oh wow, a new friend! Hi!! I'm ${name}. I still can't stop thinking about what happened in the story… can you?`,
+    `${name} here! Ahh this is so exciting — someone wants to talk to me! What do you want to do first?`
+  ];
+  const greeting=greetings[Math.floor(Math.random()*greetings.length)];
+  // display only — do NOT push to chatHistory, Gemini needs user-first alternation
+  appendChatBubble('char',info.emoji,greeting,info.color,name);
+  playCharVoice(greeting,info.voice).catch(()=>{});
+}
+
+async function sendChatMsg(){
+  const inp=document.getElementById('chat-text');
+  const text=inp.value.trim();if(!text||!chatCharName)return;
+  inp.value='';
+  await handleUserChat(text);
+}
+// Enter key to send chat
+document.getElementById('chat-text').addEventListener('keydown',e=>{if(e.key==='Enter')sendChatMsg();});
+
+async function handleUserChat(text){
+  if(!chatCharName||!apiKey)return;
+  // stop any playing audio (user is talking)
+  if(chatAudio){chatAudio.pause();chatAudio=null;}
+  const info=charMap[chatCharName]||{color:COLORS[0],emoji:'🐰',voice:'Puck'};
+  appendChatBubble('user','🧒',text,'#EEEAFF','你');
+  chatHistory.push({role:'user',parts:[{text}]});
+  earnCoins(1,'');
+  const tid=showDots(info.emoji);
+  try{
+    const reply=await getChatReply(info);
+    removeDots(tid);
+    chatHistory.push({role:'model',parts:[{text:reply}]});
+    appendChatBubble('char',info.emoji,reply,info.color,chatCharName);
+    playCharVoice(reply,info.voice).catch(()=>{});
+  }catch(e){
+    removeDots(tid);
+    const oops=`Whoops! My brain got a little fuzzy. Can you say that again?`;
+    appendChatBubble('char',info.emoji,oops,info.color,chatCharName);
+    playCharVoice(oops,info.voice).catch(()=>{});
+  }
+}
+
+async function getChatReply(info){
+  const char=storyData?.characters?.find(c=>c.name===chatCharName)||{name:chatCharName,trait:'friendly'};
+  // Build system context as the first exchange
+  const sys=`You are ${char.name} — a ${char.trait} character from a children's story called "${storyData?.story_title_en||'our story'}".
+
+How to talk:
+- ONLY English. Always. Even if the kid writes Chinese — understand it, reply in English.
+- SHORT replies: 1 to 3 sentences max. No essays.
+- Sound like a real playful friend, NOT a tutor, NOT a robot. Natural, warm, a little goofy sometimes.
+- Reference the story casually when it fits: "remember when we…" or "that was the best part!"
+- End with a short question now and then to keep the chat alive.
+- NEVER say "As an AI", "I cannot", "I'm a language model", or "I'm just a character". You ARE ${char.name}.
+- No correcting, no teaching, no lecturing — pure friendship vibes.
+- If the kid seems sad or worried, be extra warm and caring.
+- Use fun exclamations: Oh wow!, Haha!, Eek!, No way!, etc.`;
+
+  // Use systemInstruction (proper Gemini API) so conversation history stays clean
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    {method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({
+       systemInstruction:{parts:[{text:sys}]},
+       contents:chatHistory,
+       generationConfig:{maxOutputTokens:300,temperature:0.85}
+     })}
+  );
+  const d=await res.json();if(d.error)throw new Error(d.error.message);
+  return d.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'Hmm, I got distracted by a butterfly! What were you saying?';
+}
+
+function appendChatBubble(side,av,text,color,name){
+  const log=document.getElementById('chat-log');
+  const div=document.createElement('div');
+  div.className='cmsg '+(side==='user'?'user-msg':'');
+  const nameColor=side==='char'?color:'#aaa';
+  const bubStyle=side==='char'
+    ?`background:${color}1A;color:#1a1a2e;border-radius:.4rem 1.1rem 1.1rem 1.1rem;border:2px solid ${color}40`
+    :`background:#EEEAFF;color:#2C2C54;border-radius:1.1rem 1.1rem .35rem 1.1rem`;
+  div.innerHTML=`<div class="cmsg-av">${av}</div>
+    <div class="cmsg-body">
+      <div class="cmsg-name" style="color:${nameColor}">${esc(name)}</div>
+      <div class="cmsg-bubble" style="${bubStyle}">${esc(text)}</div>
+    </div>`;
+  log.appendChild(div);
+  setTimeout(()=>log.scrollTop=log.scrollHeight,50);
+}
+
+function showDots(av){
+  const id='dots-'+(++typingN);
+  const log=document.getElementById('chat-log');
+  const div=document.createElement('div');div.className='cmsg';div.id=id;
+  div.innerHTML=`<div class="cmsg-av">${av}</div><div class="chat-dots"><span></span><span></span><span></span></div>`;
+  log.appendChild(div);log.scrollTop=log.scrollHeight;return id;
+}
+function removeDots(id){document.getElementById(id)?.remove();}
+
+async function playCharVoice(text,voice){
+  if(chatAudio){chatAudio.pause();chatAudio=null;}
+  try{
+    const b64=await geminiTTS(text,voice);
+    if(!b64)return;
+    const url=makeWav(b64);
+    chatAudio=new Audio(url);
+    chatAudio.onended=()=>{URL.revokeObjectURL(url);chatAudio=null;};
+    chatAudio.play().catch(()=>{});  // silent fail — avoid speechSynthesis triggering mic dialog
+  }catch{/* silent */}
+}
+
+// ── BALLPIT  WebGL + GLSL ──
+(function(){
+  const cv=document.getElementById('ballpit-canvas');
+  const gl=cv.getContext('webgl')||cv.getContext('experimental-webgl');
+  if(!gl) return;
+
+  /* pass ball data via floating-point texture — avoids uniform count limits */
+  const floatExt=gl.getExtension('OES_texture_float')||gl.getExtension('OES_texture_half_float');
+  // fallback: use UNSIGNED_BYTE with normalised encoding if no float ext
+  const useFloat=!!gl.getExtension('OES_texture_float');
+
+  const NB=42; // number of balls
+  const TEXW=128; // texture width (NB*3 ≤ 128)
+
+  const VERT=`attribute vec2 a_p; void main(){gl_Position=vec4(a_p,0.,1.);}`;
+
+  const FRAG=`
+precision highp float;
+uniform vec2  u_res;
+uniform float u_nb;
+uniform sampler2D u_d; /* ball data texture: 3 texels/ball */
+
+/* texel layout per ball i (u = (3i + slot + .5) / TEXW):
+   slot 0 → (x, y, r, sqx)
+   slot 1 → (sqy, base.r, base.g, base.b)
+   slot 2 → (hi.r, hi.g, hi.b, 0)          */
+#define TEXW 128.
+
+vec4 bd(float i, float s){
+  return texture2D(u_d, vec2((i*3.+s+.5)/TEXW, .5));
+}
+
+vec3 srgb(vec3 c){ return sqrt(clamp(c,0.,1.)); }
+
+void main(){
+  vec2 px=vec2(gl_FragCoord.x, u_res.y-gl_FragCoord.y);
+  int nb=int(u_nb);
+
+  /* ── pure-black background with faint deep-purple tint ── */
+  vec3 bg=vec3(.018,.010,.040);
+
+  /* find frontmost ball at this pixel */
+  float minD=1e5;
+  bool  hit=false;
+  vec2  hP; float hR,hSQx,hSQy;
+  vec3  hBase,hHi;
+
+  for(int i=0;i<42;i++){
+    if(i>=nb) break;
+    float fi=float(i);
+    vec4 t0=bd(fi,0.); vec4 t1=bd(fi,1.);
+    vec2 bp=t0.xy; float r=t0.z; float sqx=t0.w;
+    float sqy=t1.x;
+    vec2 dq=(px-bp)/vec2(sqx,sqy);
+    float d=length(dq)-r;
+    if(d<minD){
+      minD=d;
+      if(d<0.){
+        hit=true;
+        hP=bp; hR=r; hSQx=sqx; hSQy=sqy;
+        hBase=t1.yzw;
+        hHi=bd(fi,2.).xyz;
+      }
+    }
+  }
+
+  if(!hit){
+    /* soft coloured halo around each ball */
+    vec3 col=bg;
+    for(int i=0;i<42;i++){
+      if(i>=nb) break;
+      float fi=float(i);
+      vec4 t0=bd(fi,0.);
+      float d=length(px-t0.xy)-t0.z;
+      if(d>0.&&d<100.){
+        float f=pow(1.-d/100.,3.);
+        col+=bd(fi,1.).yzw * f * .18; /* base colour halo */
+      }
+    }
+    gl_FragColor=vec4(srgb(col),1.); return;
+  }
+
+  /* ── 3-light Phong on ellipsoid surface ── */
+  vec2 dp=px-hP;
+  float z2=hR*hR - dp.x*dp.x/(hSQx*hSQx) - dp.y*dp.y/(hSQy*hSQy);
+  vec3 N=normalize(vec3(dp.x/(hSQx*hSQx),-dp.y/(hSQy*hSQy),sqrt(max(0.,z2))));
+  vec3 V=vec3(0.,0.,1.);
+
+  vec3 Lk=normalize(vec3(-.48,-.68,.86));
+  vec3 Lf=normalize(vec3( .60, .32,.68));
+
+  float dk=max(0.,dot(N,Lk));
+  float df=max(0.,dot(N,Lf))*.22;
+
+  /* specular: tight primary + wide sheen */
+  float sk =pow(max(0.,dot(normalize(Lk+V),N)),200.)* 1.35;
+  float sk2=pow(max(0.,dot(normalize(Lk+V),N)), 18.)* .38;
+
+  /* fresnel — very strong for glass/plastic edge glow */
+  float NdV=max(0.,dot(N,V));
+  float fres=pow(1.-NdV, 2.4)*.95;
+
+  /* transparency-like inner softness at dead-center */
+  float centerBright=pow(NdV,3.)*.12;
+
+  vec3 col = hBase*.025;                 /* near-black ambient   */
+  col +=hBase*dk*.92;                    /* key diffuse — vivid  */
+  col +=hBase*df*.06;                    /* fill: barely there   */
+  col +=vec3(1.,.99,.97)*sk;             /* tight white hotspot  */
+  col +=mix(hBase,hHi,.5)*sk2;          /* sheen                */
+  col +=mix(hBase,hHi,.82)*fres;        /* rim glow             */
+  col +=hHi*centerBright;               /* centre translucency  */
+
+  /* inter-ball contact darkening (ambient occlusion approx) */
+  float ao=1.;
+  for(int i=0;i<42;i++){
+    if(i>=nb) break;
+    vec4 t0=bd(float(i),0.);
+    float d=length(px-t0.xy)-t0.z;
+    if(d<0.&&abs(length(px-t0.xy)-length(px-hP))>.5){
+      ao=min(ao,.78+.22*(-d/hR));
+    }
+  }
+  col*=ao;
+
+  gl_FragColor=vec4(srgb(col),1.);
+}`;
+
+  /* compile */
+  function mkS(t,s){
+    const sh=gl.createShader(t);
+    gl.shaderSource(sh,s); gl.compileShader(sh);
+    if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(sh));
+    return sh;
+  }
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mkS(gl.VERTEX_SHADER,VERT));
+  gl.attachShader(prog,mkS(gl.FRAGMENT_SHADER,FRAG));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  /* fullscreen quad */
+  const qb=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,qb);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  const aP=gl.getAttribLocation(prog,'a_p');
+  gl.enableVertexAttribArray(aP); gl.vertexAttribPointer(aP,2,gl.FLOAT,false,0,0);
+
+  /* data texture: TEXW×1 RGBA float */
+  const texData=new Float32Array(TEXW*4);
+  const tex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const FMT=useFloat?gl.FLOAT:gl.UNSIGNED_BYTE;
+  const TYPE=useFloat?gl.FLOAT:gl.UNSIGNED_BYTE;
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,TEXW,1,0,gl.RGBA,FMT,null);
+
+  const uRes=gl.getUniformLocation(prog,'u_res');
+  const uNb =gl.getUniformLocation(prog,'u_nb');
+  gl.uniform1i(gl.getUniformLocation(prog,'u_d'),0);
+
+  /* ── vivid palette — saturated to match reference image ── */
+  const PAL=[
+    [[.36,.82,.52],[.64,.95,.74]],  // vivid mint green
+    [[.34,.76,.88],[.58,.90,.96]],  // vivid teal
+    [[.50,.62,.97],[.72,.80,.99]],  // vivid blue
+    [[.62,.46,.95],[.80,.68,.99]],  // vivid purple
+    [[.97,.52,.64],[.99,.76,.82]],  // vivid coral pink
+    [[.95,.66,.50],[.98,.84,.70]],  // vivid salmon
+    [[.48,.88,.44],[.72,.96,.66]],  // vivid lime green
+    [[.70,.62,.98],[.85,.78,.99]],  // vivid lavender
+    [[.96,.82,.40],[.99,.92,.66]],  // warm gold
+    [[.50,.78,.97],[.72,.90,.99]],  // vivid sky blue
+  ];
+
+  const G=.38,BNC=.66,DRG=.9988,FRC=.992;
+  let W,H,balls=[];
+  let mx=-9999,my=-9999,mvx=0,mvy=0,mpx=-9999,mpy=-9999;
+
+  function resize(){
+    W=cv.width=innerWidth; H=cv.height=innerHeight;
+    gl.viewport(0,0,W,H);
+  }
+  resize(); window.addEventListener('resize',resize);
+
+  /* mouse tracking */
+  window.addEventListener('mousemove',e=>{
+    mvx=e.clientX-mpx; mvy=e.clientY-mpy;
+    mx=e.clientX; my=e.clientY;
+    mpx=mx; mpy=my;
+  });
+  window.addEventListener('mouseleave',()=>{mx=-9999;my=-9999;mvx=0;mvy=0;});
+
+  /* click — blast nearby balls outward */
+  window.addEventListener('mousedown',e=>{
+    if(e.button!==0)return;
+    const cx=e.clientX,cy=e.clientY;
+    for(const b of balls){
+      const dx=b.x-cx,dy=b.y-cy;
+      const d=Math.sqrt(dx*dx+dy*dy)||.001;
+      const blast=b.r*4;
+      if(d<blast){
+        const f=(1-d/blast)*16;
+        b.vx+=dx/d*f; b.vy+=dy/d*f-5;
+        const s=Math.min(.38,f/42);
+        b.sqy=1-s; b.sqx=1+s*.72;
+      }
+    }
+  });
+
+  /* spawn balls — start above screen at staggered heights */
+  for(let i=0;i<NB;i++){
+    const r=20+Math.random()*30;
+    const p=PAL[i%PAL.length];
+    balls.push({
+      x:r+Math.random()*(W-2*r),
+      y:-r-Math.random()*H*1.2,
+      r, vx:(Math.random()-.5)*4, vy:1+Math.random()*2,
+      sqx:1,sqy:1, c0:p[0],c1:p[1]
+    });
+  }
+
+  function frame(){
+    /* ── physics ── */
+    for(const b of balls){
+      b.vy+=G; b.vx*=DRG; b.vy*=DRG;
+      b.x+=b.vx; b.y+=b.vy;
+      if(b.y+b.r>=H){
+        b.y=H-b.r;
+        const imp=Math.abs(b.vy);
+        b.vy=-b.vy*BNC; b.vx*=FRC;
+        if(imp>3){const s=Math.min(.48,imp/18);b.sqy=1-s;b.sqx=1+s*.58;}
+        if(Math.abs(b.vy)<.75)b.vy=0;
+      }
+      if(b.x-b.r<0){b.x=b.r;b.vx=Math.abs(b.vx)*.74;b.sqx=.87;b.sqy=1.10;}
+      if(b.x+b.r>W){b.x=W-b.r;b.vx=-Math.abs(b.vx)*.74;b.sqx=.87;b.sqy=1.10;}
+      if(b.y-b.r<0){b.y=b.r;b.vy=Math.abs(b.vy)*.68;}
+
+      /* mouse hover — repulsion + drag */
+      const mdx=b.x-mx,mdy=b.y-my;
+      const md=Math.sqrt(mdx*mdx+mdy*mdy)||.001;
+      const hR=b.r*2.2;
+      if(md<hR){
+        const nx=mdx/md,ny=mdy/md;
+        const str=(1-md/hR)*(1-md/hR);
+        b.vx+=nx*str*5+mvx*str*.28;
+        b.vy+=ny*str*5+mvy*str*.28;
+        if(md<b.r*1.1){const sq=.10*str;b.sqy=Math.min(b.sqy,1-sq);b.sqx=Math.max(b.sqx,1+sq*.6);}
+      }
+
+      b.sqx+=(1-b.sqx)*.22; b.sqy+=(1-b.sqy)*.22;
+    }
+
+    /* ── ball-to-ball collision ── */
+    for(let i=0;i<NB;i++){
+      for(let j=i+1;j<NB;j++){
+        const a=balls[i],b=balls[j];
+        const dx=b.x-a.x,dy=b.y-a.y;
+        const dist=Math.sqrt(dx*dx+dy*dy)||.001;
+        const minD=a.r+b.r;
+        if(dist<minD){
+          const nx=dx/dist,ny=dy/dist;
+          const ov=(minD-dist)*.52;
+          a.x-=nx*ov; a.y-=ny*ov;
+          b.x+=nx*ov; b.y+=ny*ov;
+          const rv=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+          if(rv>0){
+            const imp=rv*.72;
+            a.vx-=imp*nx; a.vy-=imp*ny;
+            b.vx+=imp*nx; b.vy+=imp*ny;
+            if(rv>2.5){const s=Math.min(.20,rv/40);a.sqx=b.sqx=1-s;a.sqy=b.sqy=1+s*.5;}
+          }
+        }
+      }
+    }
+
+    /* ── upload ball data into texture ── */
+    for(let i=0;i<NB;i++){
+      const b=balls[i], base=i*3*4;
+      /* slot 0: x,y,r,sqx */
+      texData[base  ]=b.x; texData[base+1]=b.y;
+      texData[base+2]=b.r; texData[base+3]=b.sqx;
+      /* slot 1: sqy, base rgb */
+      texData[base+4]=b.sqy;
+      texData[base+5]=b.c0[0]; texData[base+6]=b.c0[1]; texData[base+7]=b.c0[2];
+      /* slot 2: highlight rgb */
+      texData[base+8]=b.c1[0]; texData[base+9]=b.c1[1]; texData[base+10]=b.c1[2];
+      texData[base+11]=0;
+    }
+    gl.bindTexture(gl.TEXTURE_2D,tex);
+    if(useFloat)
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,TEXW,1,0,gl.RGBA,gl.FLOAT,texData);
+    else{
+      /* fallback: encode floats as fixed-point UBYTE — positions normalised by res */
+      const ub=new Uint8Array(TEXW*4);
+      for(let i=0;i<NB;i++){
+        const s=i*3*4;
+        ub[s  ]=Math.round(texData[s  ]/W*255);ub[s+1]=Math.round(texData[s+1]/H*255);
+        ub[s+2]=Math.round(texData[s+2]/200*255);ub[s+3]=Math.round(texData[s+3]/.5*127);
+        ub[s+4]=Math.round(texData[s+4]/.5*127);
+        for(let k=5;k<12;k++)ub[s+k]=Math.round(texData[s+k]*255);
+      }
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,TEXW,1,0,gl.RGBA,gl.UNSIGNED_BYTE,ub);
+    }
+
+    gl.uniform2f(uRes,W,H);
+    gl.uniform1f(uNb,NB);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+function toggleChatMic(){
+  if(chatListen){
+    chatListen=false;
+    const btn=document.getElementById('chat-mic-btn');
+    btn.classList.remove('listen');btn.textContent='🎤';
+    stopSR();return;
+  }
+  if(chatAudio){chatAudio.pause();chatAudio=null;}
+  const ok=startSR(
+    t=>{// final result
+      chatListen=false;
+      const btn=document.getElementById('chat-mic-btn');
+      btn.classList.remove('listen');btn.textContent='🎤';
+      document.getElementById('chat-text').value=t;
+      setTimeout(()=>sendChatMsg(),250);
+    },
+    null
+  );
+  if(ok){
+    chatListen=true;
+    const btn=document.getElementById('chat-mic-btn');
+    btn.classList.add('listen');btn.textContent='🔴';
+  }
+}
+</script>
+</body>
+</html>
