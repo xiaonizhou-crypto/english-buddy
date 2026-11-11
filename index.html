@@ -377,6 +377,7 @@ header{
 #toast.show{transform:translateX(-50%) translateY(0)}
 .err-box{display:none;background:rgba(255,107,138,.1);border-radius:1.25rem;padding:1.1rem;text-align:center;border:1px solid rgba(255,107,138,.4);margin-top:1.25rem}
 .err-box.on{display:block}.err-box p{font-weight:800;color:var(--coral);font-size:.9rem}
+#key-bar{flex-wrap:wrap}#key-note{display:block;flex-basis:100%;font-size:.75rem;line-height:1.5;opacity:.85}#key-input{min-width:8rem}
 </style>
 </head>
 <body>
@@ -400,8 +401,10 @@ header{
 
 <div id="key-bar">
   <label for="key-input">🔑 Gemini API Key</label>
-  <input type="password" id="key-input" placeholder="AIza…" autocomplete="off"/>
-  <button id="key-save" onclick="saveKey()">保存</button>
+  <input type="password" id="key-input" placeholder="仅在本次页面临时使用" autocomplete="off" spellcheck="false" aria-describedby="key-note"/>
+  <button id="key-save" onclick="saveKey()">本次使用</button>
+  <button type="button" onclick="clearKey()">清除 Key</button>
+  <small id="key-note">Key 不保存到浏览器，刷新或离开页面后需重填。图片和文字会发送给 Google；不要输入敏感资料。此为自备 Key 演示。</small>
 </div>
 
 <div class="tabs">
@@ -546,13 +549,32 @@ function earnCoins(n,label){
 (()=>{if(!localStorage.getItem(COIN_KEY)){localStorage.setItem(COIN_KEY,'30');}document.getElementById('hdr-coin-count').textContent=_coins;})();
 
 // ── API KEY ──
-let apiKey=localStorage.getItem('bk')||'';
-const keyBar=document.getElementById('key-bar');
-const keyInput=document.getElementById('key-input');
-if(apiKey){keyInput.value=apiKey;keyBar.classList.add('gone');}
-function saveKey(){apiKey=keyInput.value.trim();localStorage.setItem('bk',apiKey);keyBar.classList.add('gone');}
-function showKey(){keyBar.classList.remove('gone');keyInput.focus();}
-keyInput.addEventListener('keydown',e=>{if(e.key==='Enter')saveKey();});
+// Credentials remain in this page's memory only. Never restore old saved keys.
+let apiKey = '';
+function clearLegacyKey() {
+  try { localStorage.removeItem('bk'); } catch { /* Storage may be blocked. */ }
+  try { sessionStorage.removeItem('bk'); } catch { /* Storage may be blocked. */ }
+}
+clearLegacyKey();
+const keyBar = document.getElementById('key-bar');
+const keyInput = document.getElementById('key-input');
+function saveKey() {
+  const value = keyInput.value.trim();
+  if (!value) { showKey(); return; }
+  apiKey = value;
+  keyInput.value = '';
+  clearLegacyKey();
+  keyBar.classList.add('gone');
+}
+function showKey() { keyBar.classList.remove('gone'); keyInput.focus(); }
+function clearKey() {
+  apiKey = '';
+  keyInput.value = '';
+  clearLegacyKey();
+  showKey();
+}
+window.addEventListener('pagehide', clearKey);
+keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveKey(); });
 
 // ── TABS ──
 function switchTab(t){
@@ -616,8 +638,8 @@ async function analyze(){
   if(!V.b64)return;if(!apiKey){showKey();return;}
   hide('analyze-wrap');show('loading-wrap');document.getElementById('err-box').classList.remove('on');
   try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify({
         contents:[{parts:[{inline_data:{mime_type:V.mime,data:V.b64}},{text:`Cheerful English teacher for Chinese kids age 6–12. Choose 5–6 concrete, visible words (A1–B1), mix nouns/verbs/adj. Prefer interesting words. For each: English, IPA phonetic, part of speech, Chinese, simple example (max 8 words), bounding box (ymin/xmin/ymax/xmax 0–1000). Also: 2-sentence fun scene description EN+ZH, short title. JSON only.`}]}],
         generationConfig:{responseMimeType:'application/json',responseSchema:{type:'OBJECT',properties:{title:{type:'STRING'},description:{type:'OBJECT',properties:{english:{type:'STRING'},chinese:{type:'STRING'}},required:['english','chinese']},items:{type:'ARRAY',items:{type:'OBJECT',properties:{english:{type:'STRING'},phonetic:{type:'STRING'},partOfSpeech:{type:'STRING'},chinese:{type:'STRING'},example:{type:'STRING'},boundingBox:{type:'OBJECT',properties:{ymin:{type:'NUMBER'},xmin:{type:'NUMBER'},ymax:{type:'NUMBER'},xmax:{type:'NUMBER'}},required:['ymin','xmin','ymax','xmax']}},required:['english','phonetic','partOfSpeech','chinese','example','boundingBox']}}},required:['items','description','title']}}
       })}
@@ -638,14 +660,20 @@ function renderVResults(d){
   setVStoryBtn('idle');
   document.getElementById('word-cards').innerHTML=(d.items||[]).map((item,i)=>{
     const c=COLORS[i%COLORS.length];
-    return`<div class="wcard" style="border-color:${c}25" onclick="speakFeedback('${esc(item.english)}',event)">
+    return`<div class="wcard" style="border-color:${c}25" data-word="${esc(item.english)}">
       <div style="position:absolute;top:0;left:0;right:0;height:4px;border-radius:1.5rem 1.5rem 0 0;background:${c}"></div>
       <div class="wcard-top"><div><div class="wcard-word" style="color:${c}">${esc(item.english)}</div><div class="wcard-ph">${esc(item.phonetic)}</div></div>
-      <button class="wcard-spk" style="color:${c}" onclick="event.stopPropagation();speakWord('${esc(item.english)}')">🔊</button></div>
+      <button class="wcard-spk" style="color:${c}" data-speak="${esc(item.english)}">🔊</button></div>
       <p style="margin-bottom:.35rem"><span style="font-size:.7rem;font-weight:700;margin-right:.2rem;opacity:.7;font-style:italic">${esc(item.partOfSpeech)}</span><span style="font-size:.95rem;font-weight:800">${esc(item.chinese)}</span></p>
       <p class="wcard-ex">${esc(item.example)}</p>
     </div>`;
   }).join('');
+  document.getElementById('word-cards').querySelectorAll('[data-word]').forEach(card => {
+    card.addEventListener('click', event => speakFeedback(card.dataset.word, event));
+  });
+  document.getElementById('word-cards').querySelectorAll('[data-speak]').forEach(button => {
+    button.addEventListener('click', event => { event.stopPropagation(); speakWord(button.dataset.speak); });
+  });
   show('vocab-results');setTimeout(updateOverlay,80);
   const wc=(d.items||[]).length;if(wc>0)earnCoins(wc*2,`学了${wc}个新单词！`);
 }
@@ -803,8 +831,8 @@ async function generateStory(){
 
   try{
     // ── Step 1: Story structure ──
-    const sr=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    const sr=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify({
         contents:[{parts:[{text:`Create a beautiful, emotionally engaging 3-panel children's story for Chinese kids aged 6–12.
 
 Topic: "${topic}"
@@ -894,7 +922,7 @@ function renderCharRow(){
     const info=charMap[c.name]||{color:COLORS[0],emoji:'🐰',voice:'Puck'};
     const chip=document.createElement('button');chip.className='char-chip';
     chip.style.cssText=`background:${info.color}18;border-color:${info.color}`;
-    chip.innerHTML=`<span class="char-emoji">${info.emoji}</span><span style="color:${info.color}">${esc(c.name)}</span><span style="color:#aaa;font-size:.7rem;font-weight:600"> ${esc(c.chinese_name)}</span><span class="char-voice-indicator" style="background:${info.color}" id="cvi-${esc(c.name)}"></span>`;
+    chip.innerHTML=`<span class="char-emoji">${esc(info.emoji)}</span><span style="color:${info.color}">${esc(c.name)}</span><span style="color:#aaa;font-size:.7rem;font-weight:600"> ${esc(c.chinese_name)}</span><span class="char-voice-indicator" style="background:${info.color}" id="cvi-${esc(c.name)}"></span>`;
     chip.title=`点击听 ${c.name} 说话`;
     chip.onclick=()=>speakCharLine(c.name,`Hi! I am ${c.name}!`,info.voice);
     row.appendChild(chip);
@@ -903,13 +931,14 @@ function renderCharRow(){
 
 function renderPanel(panel,idx,imgSrc){
   const div=document.createElement('div');div.className='comic-panel';
-  const imgHtml=imgSrc?`<img class="panel-img" src="${imgSrc}" alt="panel ${idx+1}"/>`:`<div class="panel-placeholder">${['🌟','🌈','🦋'][idx]||'🖼️'}</div>`;
+  const safeImage = typeof imgSrc === 'string' && /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=\r\n]+$/.test(imgSrc) ? imgSrc : null;
+  const imgHtml=safeImage?`<img class="panel-img" src="${safeImage}" alt="panel ${idx+1}"/>`:`<div class="panel-placeholder">${['🌟','🌈','🦋'][idx]||'🖼️'}</div>`;
   div.innerHTML=`
     <div class="panel-img-wrap" id="pwrap-${idx}">
       ${imgHtml}
       <div class="bubble-layer" id="blayer-${idx}"></div>
     </div>
-    <div class="panel-num-bar">第 ${panel.panel_number} 幅 · Panel ${panel.panel_number}</div>`;
+    <div class="panel-num-bar">第 ${esc(panel.panel_number)} 幅 · Panel ${esc(panel.panel_number)}</div>`;
   document.getElementById('comic-strip').appendChild(div);
 
   // Wait for image to load then place bubbles
@@ -1034,8 +1063,8 @@ async function speakCharLine(charName,text,voice,bubEl){
 }
 
 async function generateImage(prompt){
-  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict?key=${apiKey}`,
-    {method:'POST',headers:{'Content-Type':'application/json'},
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict`,
+    {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},
      body:JSON.stringify({instances:[{prompt}],parameters:{sampleCount:1,aspectRatio:'4:3',personGeneration:'allow_all'}})}
   );
   const d=await res.json();if(d.error)throw new Error(d.error.message);
@@ -1061,8 +1090,8 @@ function speakFeedback(word,e){
   showToast(['棒棒的！👏','真厉害！🌟','你认识这个词啦！✨','加油！💪','太棒了！🎉'][Math.floor(Math.random()*5)]);
 }
 async function geminiTTS(text,voice){
-  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
-    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent`,
+    {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify({
       contents:[{parts:[{text}]}],
       generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}}
     })}
@@ -1107,7 +1136,7 @@ function initChatSection(){
     const btn=document.createElement('button');
     btn.className='chat-pill';btn.id='cpill-'+c.name;
     btn.style.cssText=`border-color:${info.color};color:${info.color}`;
-    btn.innerHTML=`${info.emoji} <span>${esc(c.name)}</span>`;
+    btn.innerHTML=`${esc(info.emoji)} <span>${esc(c.name)}</span>`;
     btn.onclick=()=>startChatWith(c.name);
     pills.appendChild(btn);
   });
@@ -1186,8 +1215,8 @@ How to talk:
 - Use fun exclamations: Oh wow!, Haha!, Eek!, No way!, etc.`;
 
   // Use systemInstruction (proper Gemini API) so conversation history stays clean
-  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {method:'POST',headers:{'Content-Type':'application/json'},
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
+    {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},
      body:JSON.stringify({
        systemInstruction:{parts:[{text:sys}]},
        contents:chatHistory,
@@ -1206,7 +1235,7 @@ function appendChatBubble(side,av,text,color,name){
   const bubStyle=side==='char'
     ?`background:${color}1A;color:#1a1a2e;border-radius:.4rem 1.1rem 1.1rem 1.1rem;border:2px solid ${color}40`
     :`background:#EEEAFF;color:#2C2C54;border-radius:1.1rem 1.1rem .35rem 1.1rem`;
-  div.innerHTML=`<div class="cmsg-av">${av}</div>
+  div.innerHTML=`<div class="cmsg-av">${esc(av)}</div>
     <div class="cmsg-body">
       <div class="cmsg-name" style="color:${nameColor}">${esc(name)}</div>
       <div class="cmsg-bubble" style="${bubStyle}">${esc(text)}</div>
@@ -1219,7 +1248,7 @@ function showDots(av){
   const id='dots-'+(++typingN);
   const log=document.getElementById('chat-log');
   const div=document.createElement('div');div.className='cmsg';div.id=id;
-  div.innerHTML=`<div class="cmsg-av">${av}</div><div class="chat-dots"><span></span><span></span><span></span></div>`;
+  div.innerHTML=`<div class="cmsg-av">${esc(av)}</div><div class="chat-dots"><span></span><span></span><span></span></div>`;
   log.appendChild(div);log.scrollTop=log.scrollHeight;return id;
 }
 function removeDots(id){document.getElementById(id)?.remove();}
